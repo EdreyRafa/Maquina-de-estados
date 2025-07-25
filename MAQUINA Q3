@@ -1,0 +1,82 @@
+ENTITY maquinadeestado IS
+    PORT (
+        clock, reset, start, ent  : IN  BIT;
+		  op               			 : OUT BIT
+    );
+END maquinadeestado;
+
+ARCHITECTURE corpo OF maquinadeestado IS
+
+TYPE estados IS (NS, s0, s1, s2, s3, AB);
+SIGNAL estado_atual, prox_estado : estados;
+
+BEGIN
+	PROCESS (clock)
+		BEGIN
+			IF reset = '1' THEN 
+					estado_atual <= NS;
+			ELSIF clock'EVENT   AND clock = '1' THEN
+					estado_atual <= prox_estado;
+			END IF;
+		END PROCESS;
+		
+	PROCESS (estado_atual, start, ent)
+	
+		BEGIN
+		
+			CASE estado_atual IS
+				
+				WHEN NS =>
+					IF start = '1' THEN
+						prox_estado <= s0;
+					ELSE
+						prox_estado <= NS;
+					END IF;
+				
+				WHEN s0 =>
+					IF ent = '0' THEN
+						prox_estado <= s1;
+					ELSE
+						prox_estado <= NS;
+					END IF;
+					
+				WHEN s1 =>
+					IF ent = '1' THEN
+						prox_estado <= s2;
+					ELSE
+						prox_estado <= NS;
+					END IF;
+					
+				WHEN s2 =>
+					IF ent = '1' THEN
+						prox_estado <= s3;
+					ELSE
+						prox_estado <= NS;
+					END IF;
+					
+				WHEN s3 =>
+					IF ent = '0' THEN
+						prox_estado <= AB;
+					ELSE
+						prox_estado <= NS;
+					END IF;
+					
+				WHEN AB =>
+					prox_estado <= AB;
+					
+			END CASE;
+			
+	 END PROCESS;
+	 
+	 PROCESS (estado_atual)
+		BEGIN
+			
+			IF estado_atual = AB THEN
+				op <= '1';
+			ELSE
+				op <= '0';
+			END IF;
+			
+	END PROCESS;	
+	 
+END corpo;
